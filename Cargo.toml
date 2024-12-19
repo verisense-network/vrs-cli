@@ -1,9 +1,12 @@
 [package]
 name = "vrs-cli"
 version = "0.1.0"
+authors = ["edison@versense.network", "shiotoli@verisense.network", "mike@verisense.network"]
 edition = "2021"
-license = "GPL-3.0"
-author = ["mike@verisense.network"]
+license = "MIT"
+homepage = "https://verisense.network"
+repository = "https://github.com/verisense-network/vrs-cli"
+description = "Command line tool for Verisense."
 
 [[bin]]
 name = "vrx"

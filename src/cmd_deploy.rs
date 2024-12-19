@@ -7,7 +7,7 @@ use std::str::FromStr;
 use subxt::{OnlineClient, SubstrateConfig};
 
 use blake2::{Blake2s256, Digest};
-use bs58;
+// use bs58;
 use subxt::backend::{legacy::LegacyRpcMethods, rpc::RpcClient};
 use subxt::config::substrate::{AccountId32, H256};
 use subxt::config::DefaultExtrinsicParamsBuilder as Params;
@@ -95,7 +95,7 @@ async fn send_to_substrate(
     _version: u32,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Calculate digest
-    let digest_string = calculate_blake2b_digest(&file_content);
+    let digest_string = calculate_blake2b_digest(file_content);
     // println!("digest string: {}", digest_string);
     // Convert digest String to H256
     let digest = H256::from_slice(&hex::decode(&digest_string)?);
