@@ -13,16 +13,13 @@ name = "vrx"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.4", features = ["derive"] }
 sc-cli = { version = "0.46.0", default-features = true }
-
-subxt = "0.37.0"
-subxt-signer = "0.37.0"
-
+substrate-api-client = "1.16.0"
+ac-primitives = "1.16.0"
+sp-core = "34.0.0"
 tokio = { version = "1.39.3", features = ["full"] }
-
-sha2 = "0.10.6"
-hex = "0.4.3"
+clap = { version = "4.4", features = ["derive"] }
 blake2 = "0.10.6"
 bs58 = "0.5.1"
-
+hex = "0.4.3"
+# sha2 = "0.10.6"

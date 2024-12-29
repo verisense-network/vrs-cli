@@ -1,20 +1,32 @@
 use clap::Parser;
 
-use subxt::{OnlineClient, SubstrateConfig};
+use ac_primitives::Config;
+use substrate_api_client::{
+    ac_compose_macros::{compose_extrinsic, rpc_params},
+    ac_primitives::{AccountId32, DefaultRuntimeConfig},
+    Api, TransactionStatus,
+};
 
-use subxt::backend::rpc::RpcClient;
-use subxt::config::substrate::H256;
-// use subxt::config::DefaultExtrinsicParamsBuilder as Params;
-// use subxt::backend::legacy::rpc_methods::Bytes;
-// use subxt::rpc_params;
+use blake2::{Blake2s256, Digest};
+use sp_core::{crypto::Pair, sr25519, H256, OpaquePeerId, Bytes};
 
-// Generate an interface that we can use from the node's metadata.
-// #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
-#[subxt::subxt(runtime_metadata_insecure_url = "ws://127.0.0.1:9944")]
-pub mod substrate {}
+// Define your custom event structure
+#[derive(Debug, Decode)]
+struct NucleusCreatedEvent {
+    id: String,
+    name: String,
+    capacity: u16,
+}
+
+// Implement the StaticEvent trait for your custom event
+impl StaticEvent for NucleusCreatedEvent {
+    const PALLET: &'static str = "Nucleus";
+    const EVENT: &'static str = "NucleusCreated";
+}
+
 
 #[derive(Debug, Clone, Parser)]
-#[command(name = "deploy", about = "Deploy a wasm binary to the Verisense VaaS.")]
+#[command(name = "create-nucleus", about = "Create a new nucleus on the Verisense VaaS.")]
 pub struct CreateNucleusCmd {
     #[arg(short = 'n', long, value_name = "name of this nucleus")]
     name: String,
@@ -45,36 +57,59 @@ async fn send_to_substrate(
     capacity: u8,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let rpc_client = RpcClient::from_url("ws://127.0.0.1:9944").await?;
-    // Use this to construct our RPC methods:
-    // let rpc = LegacyRpcMethods::<SubstrateConfig>::new(rpc_client.clone());
-    // Create a new client
-    let api = OnlineClient::<SubstrateConfig>::from_rpc_client(rpc_client.clone()).await?;
+    // Initialize api and set the signer (sender) that is used to sign the extrinsics.
+    let url = "ws://127.0.0.1:9944";
+	let client = JsonrpseeClient::new(&url).await.unwrap();
+	let signer = AccountKeyring::Alice.pair();
 
-    // Create a signer (you'll need to replace this with actual key management)
-    let signer = subxt_signer::sr25519::dev::alice();
+	let mut api = Api::<DefaultRuntimeConfig, _>::new(client).await.unwrap();
+	let extrinsic_signer = ExtrinsicSigner::<DefaultRuntimeConfig>::new(signer);
+	// Signer is needed to set the nonce and sign the extrinsic.
+	api.set_signer(extrinsic_signer.clone());
 
-    // Prepare the transaction
-    let tx = substrate::tx()
-        .nucleus() // Replace with your actual pallet name
-        .create_nucleus(
-            nucleus_name.as_bytes().to_vec(),
-            H256::zero(),
-            None,
-            capacity,
-        );
+    let tx = compose_extrinsic!(
+        api.clone(),
+        "Nucleus",
+        "create_nucleus",
+        nucleus_name.as_bytes().to_vec(),
+        H256::zero(),
+        None,
+        capacity,
+    );
 
     let result = api
-        .tx()
-        .sign_and_submit_then_watch_default(&tx, &signer)
+        .submit_and_watch_extrinsic(tx)
         .await?;
-    let events = result.wait_for_finalized_success().await?;
-    // println!("Transaction finalized: events {:?}", events);
-    for ev in events.iter().flatten() {
-        if let Some(ev) = ev.as_event::<substrate::nucleus::events::NucleusCreated>()? {
-            println!("Nucleus created.");
-            println!("  id: {}", ev.id);
-            println!("  name: {}", std::str::from_utf8(&ev.name).unwrap());
-            println!("  capacity: {}", ev.capacity);
+    // Get the extrinsic hash
+    let tx_hash = result.extrinsic_hash;
+    println!("Submitted extrinsic with hash: {:?}", tx_hash);
+
+    // Subscribe to status updates
+    let mut subscription = result.subscribe_events();
+
+    // Monitor the subscription for status updates
+    while let Some(status) = subscription.next().await {
+        match status? {
+            TransactionStatus::Finalized(block_hash) => {
+                println!("Extrinsic finalized in block: {:?}", block_hash);
+
+                let events = api.fetch_events_for_extrinsic(block_hash, tx_hash).await?;
+                for e in events {
+                    println!("raw event: {:?}", e);
+                    
+                    if let Some(e) = NucleusCreatedEvent::decode_from(&e) {
+                        println!("Nucleus created.");
+                        println!("  id: {}", ev.id);
+                        println!("  name: {}", std::str::from_utf8(&ev.name).unwrap());
+                        println!("  capacity: {}", ev.capacity);
+                    }
+                }
+                
+                break; // Exit the loop after finalization
+            }
+            _ => {
+                // do nothing
+            }
         }
     }
 
