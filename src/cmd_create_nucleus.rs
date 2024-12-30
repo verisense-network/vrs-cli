@@ -1,14 +1,22 @@
 use clap::Parser;
 
+
+use parity_scale_codec::{Encode, Decode};
+
+use sp_keyring::AccountKeyring;
 use ac_primitives::Config;
 use substrate_api_client::{
     ac_compose_macros::{compose_extrinsic, rpc_params},
-    ac_primitives::{AccountId32, DefaultRuntimeConfig},
-    Api, TransactionStatus,
+    ac_primitives::{AccountId32, DefaultRuntimeConfig, ExtrinsicSigner},
+    ac_node_api::{StaticEvent},
+    rpc::JsonrpseeClient,
+    Api, TransactionStatus, XtStatus, SubmitAndWatch,
 };
 
 use blake2::{Blake2s256, Digest};
 use sp_core::{crypto::Pair, sr25519, H256, OpaquePeerId, Bytes};
+
+type Hash = <DefaultRuntimeConfig as Config>::Hash;
 
 // Define your custom event structure
 #[derive(Debug, Decode)]
@@ -56,7 +64,6 @@ async fn send_to_substrate(
     nucleus_name: String,
     capacity: u8,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let rpc_client = RpcClient::from_url("ws://127.0.0.1:9944").await?;
     // Initialize api and set the signer (sender) that is used to sign the extrinsics.
     let url = "ws://127.0.0.1:9944";
 	let client = JsonrpseeClient::new(&url).await.unwrap();
@@ -67,51 +74,50 @@ async fn send_to_substrate(
 	// Signer is needed to set the nonce and sign the extrinsic.
 	api.set_signer(extrinsic_signer.clone());
 
+	let api2 = api.clone();
     let tx = compose_extrinsic!(
-        api.clone(),
+        api2,
         "Nucleus",
         "create_nucleus",
         nucleus_name.as_bytes().to_vec(),
         H256::zero(),
-        None,
-        capacity,
-    );
+        0,
+        capacity
+    ).expect("error when build extrinsic!");
 
-    let result = api
-        .submit_and_watch_extrinsic(tx)
-        .await?;
-    // Get the extrinsic hash
-    let tx_hash = result.extrinsic_hash;
-    println!("Submitted extrinsic with hash: {:?}", tx_hash);
+    // Send and watch extrinsic until InBlock.
+	let result = api
+		.submit_and_watch_extrinsic_until(tx, XtStatus::Finalized)
+		.await;
+	println!("[+] Sent the extrinsic.");
+	
+	// Check if the tx really was successful:
+	match result {
+		Ok(report) => {
+			let extrinsic_hash = report.extrinsic_hash;
+			let block_hash = report.block_hash.unwrap();
+			let extrinsic_status = report.status;
+			let extrinsic_events = report.events.unwrap(); // Vec<RawEventDetails<Hash>
 
-    // Subscribe to status updates
-    let mut subscription = result.subscribe_events();
+			println!("[+] Extrinsic with hash {extrinsic_hash:?} was successfully executed.",);
+			println!("[+] Extrinsic got included in block with hash {block_hash:?}");
+			println!("[+] Watched extrinsic until it reached the status {extrinsic_status:?}");
 
-    // Monitor the subscription for status updates
-    while let Some(status) = subscription.next().await {
-        match status? {
-            TransactionStatus::Finalized(block_hash) => {
-                println!("Extrinsic finalized in block: {:?}", block_hash);
+			assert!(matches!(extrinsic_status, TransactionStatus::Finalized(_block_hash)));
 
-                let events = api.fetch_events_for_extrinsic(block_hash, tx_hash).await?;
-                for e in events {
-                    println!("raw event: {:?}", e);
-                    
-                    if let Some(e) = NucleusCreatedEvent::decode_from(&e) {
-                        println!("Nucleus created.");
-                        println!("  id: {}", ev.id);
-                        println!("  name: {}", std::str::from_utf8(&ev.name).unwrap());
-                        println!("  capacity: {}", ev.capacity);
-                    }
-                }
-                
-                break; // Exit the loop after finalization
-            }
-            _ => {
-                // do nothing
-            }
-        }
-    }
+			for e in extrinsic_events {
+    			println!("raw event {e:?}");
+    			let ev = e.as_event::<NucleusCreatedEvent>().unwrap().unwrap();
+                println!("Nucleus created.");
+                println!("  id: {}", ev.id);
+                println!("  name: {}", ev.name);
+                println!("  capacity: {}", ev.capacity);
+			}
+		},
+		Err(e) => {
+			panic!("Expected the tx to succeed. Instead, it failed due to {e:?}");
+		},
+	};
 
     Ok(())
 }

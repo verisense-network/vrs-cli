@@ -17,9 +17,11 @@ sc-cli = { version = "0.46.0", default-features = true }
 substrate-api-client = "1.16.0"
 ac-primitives = "1.16.0"
 sp-core = "34.0.0"
+sp-keyring = "39.0.0"
 tokio = { version = "1.39.3", features = ["full"] }
 clap = { version = "4.4", features = ["derive"] }
 blake2 = "0.10.6"
 bs58 = "0.5.1"
 hex = "0.4.3"
+parity-scale-codec = "3.6.12"
 # sha2 = "0.10.6"
