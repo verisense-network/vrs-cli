@@ -70,20 +70,23 @@ async fn send_to_substrate(
 	let signer = AccountKeyring::Alice.pair();
 
 	let mut api = Api::<DefaultRuntimeConfig, _>::new(client).await.unwrap();
-	let extrinsic_signer = ExtrinsicSigner::<DefaultRuntimeConfig>::new(signer);
+	// let extrinsic_signer = ExtrinsicSigner::<DefaultRuntimeConfig>::new(signer);
 	// Signer is needed to set the nonce and sign the extrinsic.
-	api.set_signer(extrinsic_signer.clone());
+	// api.set_signer(extrinsic_signer.clone());
+	api.set_signer(signer.into());
 
 	let api2 = api.clone();
     let tx = compose_extrinsic!(
         api2,
         "Nucleus",
         "create_nucleus",
-        nucleus_name.as_bytes().to_vec(),
+        // nucleus_name.as_bytes().to_vec(),
+        Bytes(nucleus_name.as_bytes().to_vec()),
         H256::zero(),
-        0,
+        "0x0",
         capacity
     ).expect("error when build extrinsic!");
+	println!("Tx: {tx:?}");
 
     // Send and watch extrinsic until InBlock.
 	let result = api
