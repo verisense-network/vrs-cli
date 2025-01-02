@@ -11,6 +11,8 @@ mod cmd_create_nucleus;
 use cmd_create_nucleus::CreateNucleusCmd;
 mod cmd_query_balance;
 use cmd_query_balance::QueryBalanceCmd;
+mod cmd_transfer;
+use cmd_transfer::TransferCmd;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -57,6 +59,9 @@ pub enum Sense {
 
     /// Query the balance of an account on Verisense.
     QueryBalance(QueryBalanceCmd),
+
+    /// Transfer an amount of the token to another account on Verisense.
+    Transfer(TransferCmd),
 }
 
 /// Run the sense command, given the appropriate runtime.
@@ -72,5 +77,6 @@ fn main() -> Result<(), sc_cli::Error> {
         Sense::Deploy(cmd) => cmd.run(),
         Sense::CreateNucleus(cmd) => cmd.run(),
         Sense::QueryBalance(cmd) => cmd.run(),
+        Sense::Transfer(cmd) => cmd.run(),
     }
 }

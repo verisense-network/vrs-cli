@@ -1,8 +1,10 @@
 use clap::Parser;
+use std::str::FromStr;
 
 use subxt::{OnlineClient, SubstrateConfig};
 use subxt::backend::rpc::RpcClient;
 use subxt::config::substrate::H256;
+use subxt::utils::{AccountId32, MultiAddress};
 
 const RPC_HOST: &str = "ws://127.0.0.1:9944";
 // const RPC_HOST: &str = "wss://alpha-devnet.verisense.network";
@@ -14,16 +16,15 @@ const RPC_HOST: &str = "ws://127.0.0.1:9944";
 pub mod substrate {}
 
 #[derive(Debug, Clone, Parser)]
-#[command(name = "create-nucleus", about = "Create a new nucleus instance on the Verisense VaaS.")]
-pub struct CreateNucleusCmd {
-    #[arg(short = 'n', long, value_name = "name of this nucleus")]
-    name: String,
-
-    #[arg(short = 'c', long, value_name = "how many actors this nucleus wants")]
-    capacity: u8,
+#[command(name = "transfer", about = "Transfer some amount of token to another account on Verisense VaaS.")]
+pub struct TransferCmd {
+    #[arg(short = 'a', long, value_name = "SS58 string of the destination account")]
+    account: String,
+    #[arg(short = 'n', long, value_name = "token amount")]
+    num: u128,
 }
 
-impl CreateNucleusCmd {
+impl TransferCmd {
     /// Run the command
     pub fn run(&self) -> sc_cli::Result<()> {
         // Create a tokio runtime to run the async code
@@ -31,7 +32,7 @@ impl CreateNucleusCmd {
 
         // Run the async function in the runtime
         runtime.block_on(async {
-            if let Err(e) = send_to_substrate(self.name.clone(), self.capacity).await {
+            if let Err(e) = send_to_substrate(self.account.clone(), self.num).await {
                 eprintln!("Error sending to substrate: {}", e);
             }
         });
@@ -41,42 +42,30 @@ impl CreateNucleusCmd {
 }
 
 async fn send_to_substrate(
-    nucleus_name: String,
-    capacity: u8,
+    account: String,
+    num: u128
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let rpc_client = RpcClient::from_url(RPC_HOST).await?;
-    // Use this to construct our RPC methods:
-    // let rpc = LegacyRpcMethods::<SubstrateConfig>::new(rpc_client.clone());
-    // Create a new client
-    let api = OnlineClient::<SubstrateConfig>::from_rpc_client(rpc_client.clone()).await?;
+    // Connect to a Substrate node. Replace with your node's WebSocket URL.
+    let api = OnlineClient::<SubstrateConfig>::from_url(RPC_HOST).await?;
 
-    // Create a signer (you'll need to replace this with actual key management)
-    // let signer = subxt_signer::sr25519::dev::alice();
-    let signer = crate::utils::get_signer();
+    let from_account = crate::utils::get_signer();
+    let to_account = crate::utils::to_account(&account);
 
-    // Prepare the transaction
-    let tx = substrate::tx()
-        .nucleus() // Replace with your actual pallet name
-        .create_nucleus(
-            nucleus_name.as_bytes().to_vec(),
-            H256::zero(),
-            None,
-            capacity,
-        );
+    let balance_transfer_tx = substrate::tx().balances().transfer_allow_death(MultiAddress::Id(to_account), num);
 
-    let result = api
+    // Submit the balance transfer extrinsic from the signer, and wait for it to be successful
+    // and in a finalized block. We get back the extrinsic events if all is well.
+    let events = api
         .tx()
-        .sign_and_submit_then_watch_default(&tx, &signer)
+        .sign_and_submit_then_watch_default(&balance_transfer_tx, &from_account)
+        .await?
+        .wait_for_finalized_success()
         .await?;
-    let events = result.wait_for_finalized_success().await?;
-    // println!("Transaction finalized: events {:?}", events);
-    for ev in events.iter().flatten() {
-        if let Some(ev) = ev.as_event::<substrate::nucleus::events::NucleusCreated>()? {
-            println!("Nucleus created.");
-            println!("  id: {}", ev.id);
-            println!("  name: {}", std::str::from_utf8(&ev.name).unwrap());
-            println!("  capacity: {}", ev.capacity);
-        }
+
+    // Find a Transfer event and print it.
+    let transfer_event = events.find_first::<substrate::balances::events::Transfer>()?;
+    if let Some(event) = transfer_event {
+        println!("Balance transfer success: {event:?}");
     }
 
     Ok(())
