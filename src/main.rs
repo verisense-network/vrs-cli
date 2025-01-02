@@ -4,10 +4,13 @@ use sc_cli::{
     VerifyCmd,
 };
 
+mod utils;
 mod cmd_deploy;
 use cmd_deploy::DeployCmd;
 mod cmd_create_nucleus;
 use cmd_create_nucleus::CreateNucleusCmd;
+mod cmd_query_balance;
+use cmd_query_balance::QueryBalanceCmd;
 
 #[derive(Debug, Parser)]
 #[command(
@@ -46,11 +49,14 @@ pub enum Sense {
     /// Verify a signature for a message, provided on STDIN, with a given (public or secret) key.
     Verify(VerifyCmd),
 
-    /// Deploy a new wasm file to verisense
+    /// Deploy a new wasm file to Verisense
     Deploy(DeployCmd),
 
-    /// Query the balance of an account
+    /// Create a new nucleus instance on Verisense.
     CreateNucleus(CreateNucleusCmd),
+
+    /// Query the balance of an account on Verisense.
+    QueryBalance(QueryBalanceCmd),
 }
 
 /// Run the sense command, given the appropriate runtime.
@@ -65,5 +71,6 @@ fn main() -> Result<(), sc_cli::Error> {
         Sense::Sign(cmd) => cmd.run(),
         Sense::Deploy(cmd) => cmd.run(),
         Sense::CreateNucleus(cmd) => cmd.run(),
+        Sense::QueryBalance(cmd) => cmd.run(),
     }
 }

@@ -1,85 +1,72 @@
-/// The `generate` command
+use clap::Parser;
+use std::str::FromStr;
+
+use subxt::{OnlineClient, SubstrateConfig};
+use subxt::backend::rpc::RpcClient;
+use subxt::config::substrate::H256;
+use subxt::utils::AccountId32;
+
+const RPC_HOST: &str = "ws://127.0.0.1:9944";
+// const RPC_HOST: &str = "wss://alpha-devnet.verisense.network";
+
+// Generate an interface that we can use from the node's metadata.
+// #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
+#[subxt::subxt(runtime_metadata_insecure_url = "ws://127.0.0.1:9944")]
+// #[subxt::subxt(runtime_metadata_insecure_url = "wss://alpha-devnet.verisense.network")]
+pub mod substrate {}
+
 #[derive(Debug, Clone, Parser)]
-#[command(name = "qb", about = "Query the balance of an account")]
-pub struct QuerybalanceCmd {
-    /// The number of words in the phrase to generate. One of 12 (default), 15, 18, 21 and 24.
-    #[arg(short = 'w', long, value_name = "WORDS")]
-    words: Option<usize>,
-
-    #[allow(missing_docs)]
-    #[clap(flatten)]
-    pub keystore_params: KeystoreParams,
-
-    #[allow(missing_docs)]
-    #[clap(flatten)]
-    pub network_scheme: NetworkSchemeFlag,
-
-    #[allow(missing_docs)]
-    #[clap(flatten)]
-    pub output_scheme: OutputTypeFlag,
-
-    #[allow(missing_docs)]
-    #[clap(flatten)]
-    pub crypto_scheme: CryptoSchemeFlag,
+#[command(name = "query-balance", about = "Query the balance of an account from the Verisense VaaS.")]
+pub struct QueryBalanceCmd {
+    #[arg(short = 'a', long, value_name = "SS58 string of this account")]
+    account: String,
 }
 
-impl GenerateCmd {
+impl QueryBalanceCmd {
     /// Run the command
-    pub fn run(&self) -> Result<(), Error> {
-        let words = match self.words {
-            Some(words_count) if [12, 15, 18, 21, 24].contains(&words_count) => Ok(words_count),
-            Some(_) => Err(Error::Input(
-                "Invalid number of words given for phrase: must be 12/15/18/21/24".into(),
-            )),
-            None => Ok(12),
-        }?;
-        let mnemonic = Mnemonic::generate(words)
-            .map_err(|e| Error::Input(format!("Mnemonic generation failed: {e}").into()))?;
-        let password = self.keystore_params.read_password()?;
-        let output = self.output_scheme.output_type;
+    pub fn run(&self) -> sc_cli::Result<()> {
+        // Create a tokio runtime to run the async code
+        let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
 
-        let phrase = mnemonic.words().join(" ");
+        // Run the async function in the runtime
+        runtime.block_on(async {
+            if let Err(e) = send_to_substrate(self.account.clone()).await {
+                eprintln!("Error sending to substrate: {}", e);
+            }
+        });
 
-        with_crypto_scheme!(
-            self.crypto_scheme.scheme,
-            print_from_uri(&phrase, password, self.network_scheme.network, output)
-        );
         Ok(())
     }
 }
 
-use std::str::FromStr;
-use subxt::utils::AccountId32;
-use subxt::{OnlineClient, SubstrateConfig};
+async fn send_to_substrate(
+    account: String,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Connect to a Substrate node. Replace with your node's WebSocket URL.
+    let api = OnlineClient::<SubstrateConfig>::from_url(RPC_HOST).await?;
 
-#[subxt::subxt(runtime_metadata_path = "substrate_metadata.scale")]
-pub mod substrate {}
+    // The account whose balance you want to retrieve.
+    // let account_id = AccountId32::from_str("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap();
+    let account_id = crate::utils::to_account(&account);
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Create a client to connect to a Substrate node
-    let api = OnlineClient::<SubstrateConfig>::new().await?;
-
-    // The account we want to query
-    let account_id = AccountId32::from_str("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")?;
-
-    // Query the account info
-    let account_info = api
+    let storage_query = substrate::storage().system().account(&account_id);
+    // Query the balance.
+    let result = api
         .storage()
         .at_latest()
         .await?
-        .fetch(&substrate::storage().system().account(&account_id))
+        .fetch(&storage_query)
         .await?;
 
-    match account_info {
-        Some(info) => {
-            println!("Account: {:?}", account_id);
-            println!("Free Balance: {}", info.data.free);
-            println!("Reserved Balance: {}", info.data.reserved);
-            println!("Total Balance: {}", info.data.free + info.data.reserved);
+    match result {
+        Some(account_info) => {
+            println!("Balance of {} is: {:?}", account_id, account_info.data.free);
         }
-        None => println!("Account not found"),
+        None => {
+            println!("Account {} not found.", account_id);
+        }
     }
 
     Ok(())
 }
+

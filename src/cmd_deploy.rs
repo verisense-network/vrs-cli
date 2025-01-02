@@ -13,9 +13,13 @@ use subxt::config::substrate::{AccountId32, H256};
 use subxt::config::DefaultExtrinsicParamsBuilder as Params;
 use subxt::rpc_params;
 
+const RPC_HOST: &str = "ws://127.0.0.1:9944";
+// const RPC_HOST: &str = "wss://alpha-devnet.verisense.network";
+
 // Generate an interface that we can use from the node's metadata.
 // #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
 #[subxt::subxt(runtime_metadata_insecure_url = "ws://127.0.0.1:9944")]
+// #[subxt::subxt(runtime_metadata_insecure_url = "wss://alpha-devnet.verisense.network")]
 pub mod substrate {}
 
 #[derive(Debug, Clone, Parser)]
@@ -102,15 +106,15 @@ async fn send_to_substrate(
     println!("digest: {:?}", digest);
     // println!("digest raw: {:?}", digest.0);
 
-    let rpc_client = RpcClient::from_url("ws://127.0.0.1:9944").await?;
+    let rpc_client = RpcClient::from_url(RPC_HOST).await?;
     // Use this to construct our RPC methods:
     let rpc = LegacyRpcMethods::<SubstrateConfig>::new(rpc_client.clone());
     // Create a new client
     // let api = OnlineClient::<SubstrateConfig>::new().await?;
     let api = OnlineClient::<SubstrateConfig>::from_rpc_client(rpc_client.clone()).await?;
 
-    // Create a signer (you'll need to replace this with actual key management)
-    let signer = subxt_signer::sr25519::dev::alice();
+    // let signer = subxt_signer::sr25519::dev::alice();
+    let signer = crate::utils::get_signer();
 
     // Get the peer ID via RPC
     let peer_id_str: String = rpc_client
