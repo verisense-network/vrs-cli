@@ -4,6 +4,7 @@ use sc_cli::{
     VerifyCmd,
 };
 
+mod common;
 mod utils;
 mod cmd_deploy;
 use cmd_deploy::DeployCmd;

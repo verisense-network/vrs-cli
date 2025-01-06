@@ -6,15 +6,6 @@ use subxt::backend::rpc::RpcClient;
 use subxt::config::substrate::H256;
 use subxt::utils::{AccountId32, MultiAddress};
 
-const RPC_HOST: &str = "ws://127.0.0.1:9944";
-// const RPC_HOST: &str = "wss://alpha-devnet.verisense.network";
-
-// Generate an interface that we can use from the node's metadata.
-// #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
-#[subxt::subxt(runtime_metadata_insecure_url = "ws://127.0.0.1:9944")]
-// #[subxt::subxt(runtime_metadata_insecure_url = "wss://alpha-devnet.verisense.network")]
-pub mod substrate {}
-
 #[derive(Debug, Clone, Parser)]
 #[command(name = "transfer", about = "Transfer some amount of token to another account on Verisense VaaS.")]
 pub struct TransferCmd {
@@ -46,12 +37,12 @@ async fn send_to_substrate(
     num: u128
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Connect to a Substrate node. Replace with your node's WebSocket URL.
-    let api = OnlineClient::<SubstrateConfig>::from_url(RPC_HOST).await?;
+    let api = OnlineClient::<SubstrateConfig>::from_url(crate::common::RPC_HOST).await?;
 
     let from_account = crate::utils::get_signer();
     let to_account = crate::utils::to_account(&account);
 
-    let balance_transfer_tx = substrate::tx().balances().transfer_allow_death(MultiAddress::Id(to_account), num);
+    let balance_transfer_tx = crate::common::substrate::tx().balances().transfer_allow_death(MultiAddress::Id(to_account), num);
 
     // Submit the balance transfer extrinsic from the signer, and wait for it to be successful
     // and in a finalized block. We get back the extrinsic events if all is well.
@@ -63,7 +54,7 @@ async fn send_to_substrate(
         .await?;
 
     // Find a Transfer event and print it.
-    let transfer_event = events.find_first::<substrate::balances::events::Transfer>()?;
+    let transfer_event = events.find_first::<crate::common::substrate::balances::events::Transfer>()?;
     if let Some(event) = transfer_event {
         println!("Balance transfer success: {event:?}");
     }

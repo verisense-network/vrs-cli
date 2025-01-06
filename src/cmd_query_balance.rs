@@ -6,15 +6,6 @@ use subxt::backend::rpc::RpcClient;
 use subxt::config::substrate::H256;
 use subxt::utils::AccountId32;
 
-const RPC_HOST: &str = "ws://127.0.0.1:9944";
-// const RPC_HOST: &str = "wss://alpha-devnet.verisense.network";
-
-// Generate an interface that we can use from the node's metadata.
-// #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
-#[subxt::subxt(runtime_metadata_insecure_url = "ws://127.0.0.1:9944")]
-// #[subxt::subxt(runtime_metadata_insecure_url = "wss://alpha-devnet.verisense.network")]
-pub mod substrate {}
-
 #[derive(Debug, Clone, Parser)]
 #[command(name = "query-balance", about = "Query the balance of an account from the Verisense VaaS.")]
 pub struct QueryBalanceCmd {
@@ -43,13 +34,13 @@ async fn send_to_substrate(
     account: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Connect to a Substrate node. Replace with your node's WebSocket URL.
-    let api = OnlineClient::<SubstrateConfig>::from_url(RPC_HOST).await?;
+    let api = OnlineClient::<SubstrateConfig>::from_url(crate::common::RPC_HOST).await?;
 
     // The account whose balance you want to retrieve.
     // let account_id = AccountId32::from_str("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY").unwrap();
     let account_id = crate::utils::to_account(&account);
 
-    let storage_query = substrate::storage().system().account(&account_id);
+    let storage_query = crate::common::substrate::storage().system().account(&account_id);
     // Query the balance.
     let result = api
         .storage()

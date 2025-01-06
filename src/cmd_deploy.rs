@@ -13,15 +13,6 @@ use subxt::config::substrate::{AccountId32, H256};
 use subxt::config::DefaultExtrinsicParamsBuilder as Params;
 use subxt::rpc_params;
 
-const RPC_HOST: &str = "ws://127.0.0.1:9944";
-// const RPC_HOST: &str = "wss://alpha-devnet.verisense.network";
-
-// Generate an interface that we can use from the node's metadata.
-// #[subxt::subxt(runtime_metadata_path = "metadata.scale")]
-#[subxt::subxt(runtime_metadata_insecure_url = "ws://127.0.0.1:9944")]
-// #[subxt::subxt(runtime_metadata_insecure_url = "wss://alpha-devnet.verisense.network")]
-pub mod substrate {}
-
 #[derive(Debug, Clone, Parser)]
 #[command(name = "deploy", about = "Deploy a wasm binary to the Verisense VaaS.")]
 pub struct DeployCmd {
@@ -106,7 +97,7 @@ async fn send_to_substrate(
     println!("digest: {:?}", digest);
     // println!("digest raw: {:?}", digest.0);
 
-    let rpc_client = RpcClient::from_url(RPC_HOST).await?;
+    let rpc_client = RpcClient::from_url(crate::common::RPC_HOST).await?;
     // Use this to construct our RPC methods:
     let rpc = LegacyRpcMethods::<SubstrateConfig>::new(rpc_client.clone());
     // Create a new client
@@ -123,11 +114,8 @@ async fn send_to_substrate(
     println!("Local peer ID string: {}", peer_id_str);
     let peer_id: Vec<u8> = decode_base58(&peer_id_str)?;
 
-    // use crate::deploy_cmd::substrate::runtime_types::sp_core::H256;
-    // use crate::deploy_cmd::substrate::runtime_types::sp_runtime::AccountId32;
     // Convert PeerId to OpaquePeerId
-    use crate::cmd_deploy::substrate::runtime_types::sp_core::OpaquePeerId;
-    // let node_id = sp_core::OpaquePeerId(peer_id_str.as_bytes().to_vec());
+    use crate::common::substrate::runtime_types::sp_core::OpaquePeerId;
     let node_id = OpaquePeerId(peer_id);
     // println!("NodeId: {:?}", node_id);
 
@@ -149,7 +137,7 @@ async fn send_to_substrate(
         .build();
 
     // Prepare the transaction
-    let tx = substrate::tx()
+    let tx = crate::common::substrate::tx()
         .nucleus() // Replace with your actual pallet name
         .upload_nucleus_wasm(
             // Replace with your actual call name
