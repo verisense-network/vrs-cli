@@ -15,17 +15,20 @@ path = "src/main.rs"
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
 sc-cli = { version = "0.46.0", default-features = true }
-# sp-core = "34.0.0"
-
-# subxt = "0.37.0"
+vrs-metadata = { git = "https://github.com/verisense-network/verisense.git", package = "vrs-metadata" }
+sp-core = { features = ["serde"], version = "34.0.0" }
 subxt = { version = "0.37", features = ["substrate-compat"] }
 subxt-signer = "0.37.0"
-
+subxt-core = { version = "0.37.0" }
+subxt-codegen = { version = "0.37.0" }
+subxt-metadata = { version = "0.37.0" }
 tokio = { version = "1.39.3", features = ["full"] }
-
 sha2 = "0.10.6"
 hex = "0.4.3"
 blake2 = "0.10.6"
 bs58 = "0.5.1"
-
 dotenv = "0.15.0"
+home = "0.5.11"
+anyhow = "1.0.95"
+bip39 = { version = "2.1.0", features = ["rand"] }
+itertools = "0.14.0"
