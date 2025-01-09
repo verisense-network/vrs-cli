@@ -11,7 +11,7 @@ use subxt_signer::sr25519::Keypair;
 use vrs_metadata::codegen::runtime_types::sp_core::OpaquePeerId;
 
 #[derive(Debug, Clone, Parser)]
-#[command(name = "install", about = "Install WASM code into the associate ID.")]
+#[command(name = "install", about = "Install WASM code into the associate ID")]
 pub struct InstallCmd {
     #[arg(
         long = "id",

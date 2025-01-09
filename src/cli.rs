@@ -96,18 +96,19 @@ pub enum SubCmd {
 }
 
 #[derive(Debug, Subcommand)]
+#[command(about = "Key management subcommand")]
 pub enum KeyCommand {
     Generate(crate::key::GenerateCmd),
-    // Inspect,
-    List,
-    // Default,
+    List(crate::key::ListCmd),
+    Default(crate::key::DefaultCmd),
 }
 
 impl KeyCommand {
     pub fn run(&self) {
         let r = match self {
             KeyCommand::Generate(cmd) => cmd.run(),
-            KeyCommand::List => crate::key::list_keys(),
+            KeyCommand::List(cmd) => cmd.run(),
+            KeyCommand::Default(cmd) => cmd.run(),
         };
         if let Err(e) = r {
             eprintln!("{}", e);
@@ -116,6 +117,7 @@ impl KeyCommand {
 }
 
 #[derive(Debug, Subcommand)]
+#[command(about = "Nucleus management subcommand")]
 pub enum NucleusCommand {
     Create(crate::nucleus::CreateNucleusCmd),
     Install(crate::nucleus::InstallCmd),
@@ -134,6 +136,7 @@ impl NucleusCommand {
 }
 
 #[derive(Debug, Subcommand)]
+#[command(about = "Balance subcommand")]
 pub enum BalanceCommand {
     Query(crate::balance::QueryBalanceCmd),
     Transfer(crate::balance::TransferCmd),
