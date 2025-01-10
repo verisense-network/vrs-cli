@@ -21,7 +21,7 @@ impl CreateNucleusCmd {
     pub fn run(&self, options: crate::cli::Options) -> anyhow::Result<()> {
         let rpc = options.get_rpc();
         let key_file = options.get_keyfile();
-        let signer = crate::key::read_key(key_file)?;
+        let signer = crate::account::read_key(key_file)?;
         let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
         rt.block_on(async { submit_tx(rpc, signer, self.name.clone(), self.capacity).await })
     }

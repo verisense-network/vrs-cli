@@ -2,7 +2,7 @@ use clap::Parser;
 use subxt::utils::AccountId32;
 
 #[derive(Debug, Clone, Parser)]
-#[command(about = "List all accounts saved in the keystore")]
+#[command(about = "List all accounts in the keystore")]
 pub struct ListCmd {}
 
 impl ListCmd {
