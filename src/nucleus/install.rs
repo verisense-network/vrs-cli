@@ -29,11 +29,11 @@ impl InstallCmd {
     pub fn run(&self, options: crate::cli::Options) -> anyhow::Result<()> {
         let rpc = options.get_rpc();
         let key_file = options.get_keyfile();
-        let signer = crate::key::read_key(key_file)?;
+        let signer = crate::account::read_key(key_file)?;
         let mut f = File::open(&self.wasm_path)
             .map_err(|_| anyhow::anyhow!("Unable to read WASM from {}", self.wasm_path))?;
         let mut file_content = Vec::new();
-        let id = crate::key::to_account(&self.nucleus_id)?;
+        let id = crate::account::to_account(&self.nucleus_id)?;
         f.read_to_end(&mut file_content)
             .map_err(|e| anyhow::anyhow!("Error occur while reading WASM file: {}", e))?;
         let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");

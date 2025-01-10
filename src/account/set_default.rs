@@ -3,12 +3,12 @@ use sp_core::crypto::{AccountId32, Ss58Codec};
 use std::io::Write;
 
 #[derive(Debug, Clone, Parser)]
-#[command(about = "Set default account for the keystore")]
-pub struct DefaultCmd {
+#[command(about = "Set default account in the keystore")]
+pub struct SetDefaultCmd {
     pub account: String,
 }
 
-impl DefaultCmd {
+impl SetDefaultCmd {
     pub fn run(&self) -> anyhow::Result<()> {
         let home = crate::get_default_vrx_home();
         let account = AccountId32::from_ss58check(&self.account)?;

@@ -78,7 +78,7 @@ impl Options {
             Some(ref key) => std::path::PathBuf::from(key),
             None => {
                 let mut home = get_default_vrx_home();
-                home.push(crate::key::DEFAULT_KEY_FILE);
+                home.push(crate::account::DEFAULT_KEY_FILE);
                 home
             }
         }
@@ -88,7 +88,7 @@ impl Options {
 #[derive(Debug, Subcommand)]
 pub enum SubCmd {
     #[clap(subcommand)]
-    Key(KeyCommand),
+    Account(AccountCommand),
     #[clap(subcommand)]
     Nucleus(NucleusCommand),
     #[clap(subcommand)]
@@ -96,19 +96,19 @@ pub enum SubCmd {
 }
 
 #[derive(Debug, Subcommand)]
-#[command(about = "Key management subcommand")]
-pub enum KeyCommand {
-    Generate(crate::key::GenerateCmd),
-    List(crate::key::ListCmd),
-    Default(crate::key::DefaultCmd),
+#[command(about = "Account management subcommand")]
+pub enum AccountCommand {
+    Generate(crate::account::GenerateCmd),
+    List(crate::account::ListCmd),
+    SetDefault(crate::account::SetDefaultCmd),
 }
 
-impl KeyCommand {
+impl AccountCommand {
     pub fn run(&self) {
         let r = match self {
-            KeyCommand::Generate(cmd) => cmd.run(),
-            KeyCommand::List(cmd) => cmd.run(),
-            KeyCommand::Default(cmd) => cmd.run(),
+            AccountCommand::Generate(cmd) => cmd.run(),
+            AccountCommand::List(cmd) => cmd.run(),
+            AccountCommand::SetDefault(cmd) => cmd.run(),
         };
         if let Err(e) = r {
             eprintln!("{}", e);

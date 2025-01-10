@@ -57,7 +57,7 @@ impl GenerateCmd {
                 .open(&keypath)?;
             keyfile.write_all(&prikey.as_ref())?;
         }
-        let default_keypath = home.join(crate::key::DEFAULT_KEY_FILE);
+        let default_keypath = home.join(crate::account::DEFAULT_KEY_FILE);
         if !default_keypath.exists() {
             let mut keyfile = std::fs::OpenOptions::new()
                 .write(true)

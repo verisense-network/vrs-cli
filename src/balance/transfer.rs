@@ -22,8 +22,8 @@ impl TransferCmd {
         let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
         let rpc = options.get_rpc();
         let key_file = options.get_keyfile();
-        let signer = crate::key::read_key(key_file)?;
-        let to = crate::key::to_account(&self.to)?;
+        let signer = crate::account::read_key(key_file)?;
+        let to = crate::account::to_account(&self.to)?;
         runtime.block_on(async { transfer(signer, rpc, to, self.amount).await })
     }
 }

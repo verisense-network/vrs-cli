@@ -19,9 +19,9 @@ impl QueryBalanceCmd {
         let rpc = options.get_rpc();
         let key_file = options.get_keyfile();
         let account = match self.account {
-            Some(ref account) => crate::key::to_account(account)?,
+            Some(ref account) => crate::account::to_account(account)?,
             None => {
-                let signer = crate::key::read_key(key_file)?;
+                let signer = crate::account::read_key(key_file)?;
                 signer.public_key().into()
             }
         };

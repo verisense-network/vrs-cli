@@ -1,10 +1,10 @@
 mod generate;
-mod default;
 mod list;
+mod set_default;
 
-pub(crate) use default::*;
 pub(crate) use generate::*;
 pub(crate) use list::*;
+pub(crate) use set_default::*;
 
 use sp_core::crypto::{Ss58AddressFormat, Ss58Codec};
 use std::str::FromStr;
