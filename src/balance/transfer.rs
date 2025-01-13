@@ -47,7 +47,11 @@ async fn transfer(
     let transfer_event =
         events.find_first::<vrs_metadata::codegen::balances::events::Transfer>()?;
     if let Some(event) = transfer_event {
-        println!("Transfered to {} with amount {}", event.to, event.amount);
+        println!(
+            "Transfered {} to {}",
+            event.amount,
+            crate::account::to_ss58check(&event.to),
+        );
     }
     Ok(())
 }
