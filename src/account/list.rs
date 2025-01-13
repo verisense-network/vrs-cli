@@ -6,14 +6,20 @@ use subxt::utils::AccountId32;
 pub struct ListCmd {}
 
 impl ListCmd {
-    pub fn run(&self) -> anyhow::Result<()> {
-        let home = crate::get_default_vrx_home();
-        let default_key = home.join(super::DEFAULT_KEY_FILE);
-        if default_key.exists() {
-            let keypair = super::read_key(&default_key)?;
-            let account = AccountId32::from(keypair.public_key().0);
-            println!("[*] {}", super::to_ss58check(&account));
+    pub fn run(&self, options: crate::cli::Options) -> anyhow::Result<()> {
+        let home = options.get_vrx_home();
+        if options.verbose {
+            println!("Listing all accounts at {:?}", home);
         }
+        let default_key = home.join(super::DEFAULT_KEY_FILE);
+        let default_account = default_key
+            .exists()
+            .then(|| {
+                super::read_key(&default_key)
+                    .map(|keypair| AccountId32::from(keypair.public_key().0))
+            })
+            .transpose()
+            .unwrap_or(None);
         let keys = std::fs::read_dir(home)
             .map_err(|e| anyhow::anyhow!("Couldn't read key directory, caused by {:?}", e))?;
         keys.for_each(|entry| {
@@ -22,8 +28,13 @@ impl ListCmd {
                 if path.is_file() {
                     let name = path.file_name().unwrap().to_str().unwrap();
                     if name.starts_with("0x") {
-                        if let Ok(account) = from_pub_hex(&name) {
-                            println!("[ ] {}", super::to_ss58check(&account));
+                        if let Ok(keypair) = super::read_key(&path) {
+                            let account = AccountId32::from(keypair.public_key().0);
+                            if Some(&account) == default_account.as_ref() {
+                                println!("[*] {}", super::to_ss58check(&account));
+                            } else {
+                                println!("[ ] {}", super::to_ss58check(&account));
+                            }
                         }
                     }
                 }
@@ -31,15 +42,4 @@ impl ListCmd {
         });
         Ok(())
     }
-}
-
-pub(crate) fn from_pub_hex(hex: &str) -> anyhow::Result<AccountId32> {
-    let hex = hex.trim_start_matches("0x");
-    let bytes: Vec<u8> =
-        hex::decode(hex).map_err(|_| anyhow::anyhow!("Invalid pubkey: hex characters"))?;
-    let array: [u8; 32] = bytes
-        .try_into()
-        .map_err(|_| anyhow::anyhow!("Invalid pubkey: expecting 32 bytes"))?;
-    let pubkey = AccountId32(array);
-    Ok(pubkey)
 }

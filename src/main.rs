@@ -1,5 +1,5 @@
-mod balance;
 mod account;
+mod balance;
 mod cli;
 mod nucleus;
 
@@ -11,7 +11,7 @@ fn main() -> Result<(), sc_cli::Error> {
     match cli.cmd {
         cli::SubCmd::Nucleus(cmd) => cmd.run(cli.options),
         cli::SubCmd::Balance(cmd) => cmd.run(cli.options),
-        cli::SubCmd::Account(cmd) => cmd.run(),
+        cli::SubCmd::Account(cmd) => cmd.run(cli.options),
     }
     Ok(())
 }
