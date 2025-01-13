@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 const DEFAULT_VRX_HOME: &'static str = ".vrx";
 
-pub(crate) fn get_default_vrx_home() -> std::path::PathBuf {
+fn get_default_vrx_home() -> std::path::PathBuf {
     if let Some(mut home) = home::home_dir() {
         home.push(DEFAULT_VRX_HOME);
         home
@@ -48,6 +48,9 @@ pub struct Options {
     )]
     pub rpc: Option<String>,
 
+    #[arg(long, global = true, help = "The vrx home path, default to \"~/.vrx\"")]
+    pub vrx_dir: Option<std::path::PathBuf>,
+
     #[arg(
         short,
         long,
@@ -77,10 +80,17 @@ impl Options {
         match self.key {
             Some(ref key) => std::path::PathBuf::from(key),
             None => {
-                let mut home = get_default_vrx_home();
+                let mut home = self.get_vrx_home();
                 home.push(crate::account::DEFAULT_KEY_FILE);
                 home
             }
+        }
+    }
+
+    pub(crate) fn get_vrx_home(&self) -> std::path::PathBuf {
+        match self.vrx_dir {
+            Some(ref home) => home.clone(),
+            None => get_default_vrx_home(),
         }
     }
 }
@@ -99,16 +109,20 @@ pub enum SubCmd {
 #[command(about = "Account management subcommand")]
 pub enum AccountCommand {
     Generate(crate::account::GenerateCmd),
+    Inspect(crate::account::InspectCmd),
     List(crate::account::ListCmd),
+    Encode(crate::account::EncodeCmd),
     SetDefault(crate::account::SetDefaultCmd),
 }
 
 impl AccountCommand {
-    pub fn run(&self) {
+    pub fn run(&self, options: Options) {
         let r = match self {
-            AccountCommand::Generate(cmd) => cmd.run(),
-            AccountCommand::List(cmd) => cmd.run(),
-            AccountCommand::SetDefault(cmd) => cmd.run(),
+            AccountCommand::Generate(cmd) => cmd.run(options),
+            AccountCommand::List(cmd) => cmd.run(options),
+            AccountCommand::Encode(cmd) => cmd.run(),
+            AccountCommand::SetDefault(cmd) => cmd.run(options),
+            AccountCommand::Inspect(cmd) => cmd.run(),
         };
         if let Err(e) = r {
             eprintln!("{}", e);

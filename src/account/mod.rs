@@ -1,8 +1,12 @@
 mod generate;
+mod encode;
+mod inspect;
 mod list;
 mod set_default;
 
+pub(crate) use encode::*;
 pub(crate) use generate::*;
+pub(crate) use inspect::*;
 pub(crate) use list::*;
 pub(crate) use set_default::*;
 

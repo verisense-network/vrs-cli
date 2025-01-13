@@ -9,8 +9,8 @@ pub struct SetDefaultCmd {
 }
 
 impl SetDefaultCmd {
-    pub fn run(&self) -> anyhow::Result<()> {
-        let home = crate::get_default_vrx_home();
+    pub fn run(&self, options: crate::cli::Options) -> anyhow::Result<()> {
+        let home = options.get_vrx_home();
         let account = AccountId32::from_ss58check(&self.account)?;
         let account: [u8; 32] = account.into();
         let pubkey = format!("0x{}", hex::encode(account));
