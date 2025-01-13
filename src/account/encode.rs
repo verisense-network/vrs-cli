@@ -10,7 +10,7 @@ pub struct EncodeCmd {
         help = "The SS58 address format prefix to use. Default is 137 used by Verisense"
     )]
     pub prefix: Option<u16>,
-    #[arg(value_name = "PUBLIC")]
+    #[arg(value_name = "PUBKEY")]
     pub public: String,
 }
 

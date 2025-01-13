@@ -48,7 +48,7 @@ impl GenerateCmd {
         let phrase = mnemonic.words().join(" ");
         let scheme = self.scheme.as_deref().unwrap_or("sr25519");
 
-        let (prikey, pubkey) = match scheme {
+        let (seed, pubkey) = match scheme {
             "sr25519" => {
                 let (pair, seed) =
                     sp_core::sr25519::Pair::from_phrase(&phrase, None).expect("Invalid phrase");
@@ -65,7 +65,7 @@ impl GenerateCmd {
             }
             _ => return Err(anyhow::anyhow!("Invalid scheme")),
         };
-        let prikey_hex = format!("0x{}", hex::encode(&prikey));
+        let seed_hex = format!("0x{}", hex::encode(&seed));
         let pubkey_hex = format!("0x{}", hex::encode(&pubkey));
         let home = options.get_vrx_home();
         if !home.exists() {
@@ -76,11 +76,11 @@ impl GenerateCmd {
             println!("WARN: The default key could be sr25519 only, `--set-default` and `--save` are ignored.");
             println!(
                 "    Phrase: {}\n\
-                 Secret key: {}\n\
+                       Seed: {}\n\
                  Public key: {}\n\
                  Account Id: {}",
                 phrase,
-                prikey_hex,
+                seed_hex,
                 pubkey_hex,
                 account.to_ss58check_with_version(prefix)
             );
@@ -91,7 +91,7 @@ impl GenerateCmd {
                     .write(true)
                     .create(true)
                     .open(&keypath)?;
-                keyfile.write_all(&prikey_hex.as_ref())?;
+                keyfile.write_all(&seed_hex.as_ref())?;
             }
             let default_keypath = home.join(crate::account::DEFAULT_KEY_FILE);
             if !default_keypath.exists() {
@@ -99,20 +99,20 @@ impl GenerateCmd {
                     .write(true)
                     .create(true)
                     .open(&default_keypath)?;
-                keyfile.write_all(&prikey_hex.as_ref())?;
+                keyfile.write_all(&seed_hex.as_ref())?;
             } else if self.set_default {
                 let mut keyfile = std::fs::OpenOptions::new()
                     .write(true)
                     .open(&default_keypath)?;
-                keyfile.write_all(&prikey_hex.as_ref())?;
+                keyfile.write_all(&seed_hex.as_ref())?;
             }
             println!(
                 "    Phrase: {}\n\
-                 Secret key: {}\n\
+                       Seed: {}\n\
                  Public key: {}\n\
                  Account Id: {}",
                 phrase,
-                prikey_hex,
+                seed_hex,
                 pubkey_hex,
                 account.to_ss58check_with_version(prefix)
             );

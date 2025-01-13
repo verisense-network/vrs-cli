@@ -47,7 +47,7 @@ async fn transfer(
     let transfer_event =
         events.find_first::<vrs_metadata::codegen::balances::events::Transfer>()?;
     if let Some(event) = transfer_event {
-        println!("Success: {event:?}");
+        println!("Transfered to {} with amount {}", event.to, event.amount);
     }
     Ok(())
 }

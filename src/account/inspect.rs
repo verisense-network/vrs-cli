@@ -5,7 +5,7 @@ use sp_core::{
 };
 
 #[derive(Debug, Clone, Parser)]
-#[command(about = "Gets a public key and an account id from the phrase or raw secret key")]
+#[command(about = "Gets a public key and an account id from the phrase or secret seed")]
 pub struct InspectCmd {
     #[arg(
         long,
@@ -27,7 +27,7 @@ impl InspectCmd {
         let prefix = Ss58AddressFormat::custom(self.prefix.unwrap_or(137));
         let scheme = self.scheme.as_deref().unwrap_or("sr25519");
         let words = self.secret.split(" ").collect::<Vec<&str>>();
-        let (prikey, pubkey) = if words.len() == 1 {
+        let (seed, pubkey) = if words.len() == 1 {
             let pri_hex = words[0].trim_start_matches("0x");
             let pri = hex::decode(pri_hex)
                 .map_err(|_| anyhow::anyhow!("Invalid secret key: hex characters only"))?;
@@ -67,14 +67,14 @@ impl InspectCmd {
                 _ => return Err(anyhow::anyhow!("Invalid scheme")),
             }
         };
-        let prikey_hex = format!("0x{}", hex::encode(&prikey));
+        let seed_hex = format!("0x{}", hex::encode(&seed));
         let pubkey_hex = format!("0x{}", hex::encode(&pubkey));
         let account = AccountId32::new(pubkey.try_into().unwrap());
         println!(
-            "Secret key: {}\n\
+            "      Seed: {}\n\
              Public key: {}\n\
              Account Id: {}",
-            prikey_hex,
+            seed_hex,
             pubkey_hex,
             account.to_ss58check_with_version(prefix)
         );
