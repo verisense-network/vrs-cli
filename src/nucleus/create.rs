@@ -1,6 +1,5 @@
 use clap::Parser;
 use subxt::backend::rpc::RpcClient;
-use subxt::config::substrate::H256;
 use subxt::{OnlineClient, SubstrateConfig};
 use subxt_signer::sr25519::Keypair;
 
