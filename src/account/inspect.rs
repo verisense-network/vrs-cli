@@ -71,9 +71,10 @@ impl InspectCmd {
         let pubkey_hex = format!("0x{}", hex::encode(&pubkey));
         let account = AccountId32::new(pubkey.try_into().unwrap());
         println!(
-            "      Seed: {}\n\
-             Public key: {}\n\
-             Account Id: {}",
+            "\
+                  Seed: {}\n\
+            Public key: {}\n\
+            Account Id: {}",
             seed_hex,
             pubkey_hex,
             account.to_ss58check_with_version(prefix)

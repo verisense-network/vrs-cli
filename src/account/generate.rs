@@ -75,10 +75,11 @@ impl GenerateCmd {
         if (self.set_default || self.save_to_keystore) && scheme != "sr25519" {
             println!("WARN: The default key could be sr25519 only, `--set-default` and `--save` are ignored.");
             println!(
-                "    Phrase: {}\n\
-                       Seed: {}\n\
-                 Public key: {}\n\
-                 Account Id: {}",
+                "\
+                    Phrase: {}\n\
+                      Seed: {}\n\
+                Public key: {}\n\
+                Account Id: {}",
                 phrase,
                 seed_hex,
                 pubkey_hex,
@@ -107,10 +108,11 @@ impl GenerateCmd {
                 keyfile.write_all(&seed_hex.as_ref())?;
             }
             println!(
-                "    Phrase: {}\n\
-                       Seed: {}\n\
-                 Public key: {}\n\
-                 Account Id: {}",
+                "\
+                    Phrase: {}\n\
+                      Seed: {}\n\
+                Public key: {}\n\
+                Account Id: {}",
                 phrase,
                 seed_hex,
                 pubkey_hex,
