@@ -113,6 +113,7 @@ pub enum AccountCommand {
     List(crate::account::ListCmd),
     Encode(crate::account::EncodeCmd),
     SetDefault(crate::account::SetDefaultCmd),
+    Import(crate::account::ImportCmd),
 }
 
 impl AccountCommand {
@@ -123,6 +124,7 @@ impl AccountCommand {
             AccountCommand::Encode(cmd) => cmd.run(),
             AccountCommand::SetDefault(cmd) => cmd.run(options),
             AccountCommand::Inspect(cmd) => cmd.run(),
+            AccountCommand::Import(cmd) => cmd.run(options),
         };
         if let Err(e) = r {
             eprintln!("{}", e);

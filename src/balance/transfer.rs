@@ -50,7 +50,7 @@ async fn transfer(
         println!(
             "Transfered {} to {}",
             event.amount,
-            crate::account::to_ss58check(&event.to),
+            crate::account::to_ss58check(event.to.0),
         );
     }
     Ok(())

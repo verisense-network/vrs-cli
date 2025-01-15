@@ -47,7 +47,7 @@ async fn submit_tx(
     for ev in events.iter().flatten() {
         if let Some(ev) = ev.as_event::<vrs_metadata::codegen::nucleus::events::NucleusCreated>()? {
             println!("Nucleus created.");
-            println!("  ID: {}", ev.id);
+            println!("  ID: {}", crate::account::to_ss58check(ev.id.0));
             println!("  Name: {}", std::str::from_utf8(&ev.name).unwrap());
             println!("  Capacity: {}", ev.capacity);
         }

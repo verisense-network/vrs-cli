@@ -31,9 +31,9 @@ impl ListCmd {
                         if let Ok(keypair) = super::read_key(&path) {
                             let account = AccountId32::from(keypair.public_key().0);
                             if Some(&account) == default_account.as_ref() {
-                                println!("[*] {}", super::to_ss58check(&account));
+                                println!("[*] {}", super::to_ss58check(account.0));
                             } else {
-                                println!("[ ] {}", super::to_ss58check(&account));
+                                println!("[ ] {}", super::to_ss58check(account.0));
                             }
                         }
                     }

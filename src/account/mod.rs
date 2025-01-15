@@ -1,11 +1,13 @@
-mod generate;
 mod encode;
+mod generate;
+mod import;
 mod inspect;
 mod list;
 mod set_default;
 
 pub(crate) use encode::*;
 pub(crate) use generate::*;
+pub(crate) use import::*;
 pub(crate) use inspect::*;
 pub(crate) use list::*;
 pub(crate) use set_default::*;
@@ -35,8 +37,8 @@ pub(crate) fn to_account(account: &str) -> anyhow::Result<AccountId32> {
     AccountId32::from_str(account).map_err(|_| anyhow::anyhow!("Invalid account id"))
 }
 
-pub(crate) fn to_ss58check(account: &AccountId32) -> String {
+pub(crate) fn to_ss58check<T: Into<[u8; 32]>>(account: T) -> String {
     let prefix = Ss58AddressFormat::custom(137);
-    let account = sp_core::crypto::AccountId32::from(account.0);
+    let account = sp_core::crypto::AccountId32::from(account.into());
     account.to_ss58check_with_version(prefix)
 }
