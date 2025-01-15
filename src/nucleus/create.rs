@@ -34,7 +34,7 @@ async fn submit_tx(
 ) -> anyhow::Result<()> {
     let rpc_client = RpcClient::from_url(rpc_url.as_ref()).await?;
     let api = OnlineClient::<SubstrateConfig>::from_rpc_client(rpc_client.clone()).await?;
-    let tx = vrs_metadata::codegen::tx().nucleus().create_nucleus(
+    let tx = crate::runtime::tx().nucleus().create_nucleus(
         nucleus_name.as_bytes().to_vec(),
         None,
         capacity,
@@ -45,7 +45,7 @@ async fn submit_tx(
         .await?;
     let events = result.wait_for_finalized_success().await?;
     for ev in events.iter().flatten() {
-        if let Some(ev) = ev.as_event::<vrs_metadata::codegen::nucleus::events::NucleusCreated>()? {
+        if let Some(ev) = ev.as_event::<crate::runtime::nucleus::events::NucleusCreated>()? {
             println!("Nucleus created.");
             println!("  ID: {}", crate::account::to_ss58check(ev.id.0));
             println!("  Name: {}", std::str::from_utf8(&ev.name).unwrap());

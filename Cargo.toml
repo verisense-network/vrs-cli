@@ -14,8 +14,6 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
-sc-cli = { version = "0.46.0", default-features = true }
-vrs-metadata = { git = "https://github.com/verisense-network/verisense.git", package = "vrs-metadata" }
 sp-core = { features = ["serde"], version = "34.0.0" }
 subxt = { version = "0.37", features = ["substrate-compat"] }
 subxt-signer = "0.37.0"
@@ -32,3 +30,6 @@ anyhow = "1.0.95"
 bip39 = { version = "2.1.0", features = ["rand"] }
 itertools = "0.14.0"
 console = "0.15.10"
+
+[build-dependencies]
+reqwest = { version = "0.12.12", features = ["blocking"] }

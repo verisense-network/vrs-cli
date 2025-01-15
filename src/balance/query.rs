@@ -32,7 +32,7 @@ impl QueryBalanceCmd {
 
 async fn query(rpc: impl AsRef<str>, account: AccountId32) -> anyhow::Result<()> {
     let api = OnlineClient::<SubstrateConfig>::from_url(rpc).await?;
-    let storage_query = vrs_metadata::codegen::storage().system().account(&account);
+    let storage_query = crate::runtime::storage().system().account(&account);
     let result = api
         .storage()
         .at_latest()
