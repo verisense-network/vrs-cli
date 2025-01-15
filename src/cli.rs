@@ -1,16 +1,5 @@
 use clap::{Parser, Subcommand};
 
-const DEFAULT_VRX_HOME: &'static str = ".vrx";
-
-fn get_default_vrx_home() -> std::path::PathBuf {
-    if let Some(mut home) = home::home_dir() {
-        home.push(DEFAULT_VRX_HOME);
-        home
-    } else {
-        panic!("Couldn't read file under ~/.vrx")
-    }
-}
-
 #[derive(Debug, Parser)]
 #[command(
     name = "vrx",
@@ -61,6 +50,17 @@ pub struct Options {
 }
 
 pub(crate) const DEV_RPC_HOST: &'static str = "wss://alpha-devnet.verisense.network";
+
+const DEFAULT_VRX_HOME: &'static str = ".vrx";
+
+fn get_default_vrx_home() -> std::path::PathBuf {
+    if let Some(mut home) = home::home_dir() {
+        home.push(DEFAULT_VRX_HOME);
+        home
+    } else {
+        panic!("Couldn't read file under ~/.vrx")
+    }
+}
 
 impl Options {
     pub(crate) fn get_rpc(&self) -> String {
@@ -114,6 +114,7 @@ pub enum AccountCommand {
     Encode(crate::account::EncodeCmd),
     SetDefault(crate::account::SetDefaultCmd),
     Import(crate::account::ImportCmd),
+    Remove(crate::account::RemoveCmd),
 }
 
 impl AccountCommand {
@@ -125,6 +126,7 @@ impl AccountCommand {
             AccountCommand::SetDefault(cmd) => cmd.run(options),
             AccountCommand::Inspect(cmd) => cmd.run(),
             AccountCommand::Import(cmd) => cmd.run(options),
+            AccountCommand::Remove(cmd) => cmd.run(options),
         };
         if let Err(e) = r {
             eprintln!("{}", e);
