@@ -1,6 +1,6 @@
 [package]
 name = "vrs-cli"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["edison@versense.network", "shiotoli@verisense.network", "mike@verisense.network"]
 edition = "2021"
 license = "MIT"
