@@ -35,7 +35,7 @@ async fn transfer(
     amount: u128,
 ) -> anyhow::Result<()> {
     let api = OnlineClient::<SubstrateConfig>::from_url(rpc).await?;
-    let balance_transfer_tx = vrs_metadata::codegen::tx()
+    let balance_transfer_tx = crate::runtime::codegen::tx()
         .balances()
         .transfer_allow_death(MultiAddress::Id(to), amount);
     let events = api
@@ -44,8 +44,7 @@ async fn transfer(
         .await?
         .wait_for_finalized_success()
         .await?;
-    let transfer_event =
-        events.find_first::<vrs_metadata::codegen::balances::events::Transfer>()?;
+    let transfer_event = events.find_first::<crate::runtime::balances::events::Transfer>()?;
     if let Some(event) = transfer_event {
         println!(
             "Transfered {} to {}",

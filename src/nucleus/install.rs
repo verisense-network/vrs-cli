@@ -1,3 +1,4 @@
+use crate::runtime::runtime_types::sp_core::OpaquePeerId;
 use blake2::{Blake2s256, Digest};
 use clap::Parser;
 use std::fs::File;
@@ -8,7 +9,6 @@ use subxt::config::DefaultExtrinsicParamsBuilder as Params;
 use subxt::rpc_params;
 use subxt::{OnlineClient, SubstrateConfig};
 use subxt_signer::sr25519::Keypair;
-use vrs_metadata::codegen::runtime_types::sp_core::OpaquePeerId;
 
 #[derive(Debug, Clone, Parser)]
 #[command(name = "install", about = "Install WASM code into the associate ID")]
@@ -86,7 +86,7 @@ async fn install(
         .mortal(&current_header, 8)
         .nonce(current_nonce)
         .build();
-    let tx = vrs_metadata::codegen::tx()
+    let tx = crate::runtime::tx()
         .nucleus()
         .upload_nucleus_wasm(nucleus_id, node_id, digest);
     let signed_tx = api.tx().create_signed(&tx, &signer, ext_params).await?;
