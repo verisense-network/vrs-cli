@@ -1,6 +1,6 @@
 [package]
 name = "vrs-cli"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["edison@versense.network", "shiotoli@verisense.network", "mike@verisense.network"]
 edition = "2021"
 license = "MIT"
@@ -27,7 +27,6 @@ sha2 = "0.10.6"
 hex = "0.4.3"
 blake2 = "0.10.6"
 bs58 = "0.5.1"
-dotenv = "0.15.0"
 home = "0.5.11"
 anyhow = "1.0.95"
 bip39 = { version = "2.1.0", features = ["rand"] }
