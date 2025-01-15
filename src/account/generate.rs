@@ -95,15 +95,10 @@ impl GenerateCmd {
                 keyfile.write_all(&seed_hex.as_ref())?;
             }
             let default_keypath = home.join(crate::account::DEFAULT_KEY_FILE);
-            if !default_keypath.exists() {
+            if !default_keypath.exists() || self.set_default {
                 let mut keyfile = std::fs::OpenOptions::new()
                     .write(true)
                     .create(true)
-                    .open(&default_keypath)?;
-                keyfile.write_all(&seed_hex.as_ref())?;
-            } else if self.set_default {
-                let mut keyfile = std::fs::OpenOptions::new()
-                    .write(true)
                     .open(&default_keypath)?;
                 keyfile.write_all(&seed_hex.as_ref())?;
             }

@@ -31,3 +31,4 @@ home = "0.5.11"
 anyhow = "1.0.95"
 bip39 = { version = "2.1.0", features = ["rand"] }
 itertools = "0.14.0"
+console = "0.15.10"

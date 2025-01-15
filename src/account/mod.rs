@@ -3,6 +3,7 @@ mod generate;
 mod import;
 mod inspect;
 mod list;
+mod remove;
 mod set_default;
 
 pub(crate) use encode::*;
@@ -10,6 +11,7 @@ pub(crate) use generate::*;
 pub(crate) use import::*;
 pub(crate) use inspect::*;
 pub(crate) use list::*;
+pub(crate) use remove::*;
 pub(crate) use set_default::*;
 
 use sp_core::crypto::{Ss58AddressFormat, Ss58Codec};
@@ -20,8 +22,8 @@ use subxt_signer::sr25519::Keypair;
 pub(crate) const DEFAULT_KEY_FILE: &'static str = "default_key";
 
 pub fn read_key<P: AsRef<std::path::Path>>(file: P) -> anyhow::Result<Keypair> {
-    let key =
-        std::fs::read_to_string(file).map_err(|_| anyhow::anyhow!("Couldn't read private key"))?;
+    let key = std::fs::read_to_string(file)
+        .map_err(|_| anyhow::anyhow!("Couldn't read private key, check your \"~/.vrx/default_key\" or pass a `--key <PATH>` to indicate one"))?;
     let key = key.trim_start_matches("0x");
     let bytes: Vec<u8> =
         hex::decode(key).map_err(|_| anyhow::anyhow!("Invalid private key: hex characters"))?;
