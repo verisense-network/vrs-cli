@@ -22,6 +22,9 @@ pub struct InstallCmd {
 
     #[arg(long = "wasm", value_name = "WASM", help = "The path to the WASM file")]
     wasm_path: String,
+
+    #[arg(long = "abi", value_name = "ABI", help = "The path to the ABI file")]
+    abi_path: String,
 }
 
 impl InstallCmd {
@@ -36,8 +39,23 @@ impl InstallCmd {
         let id = crate::account::to_account(&self.nucleus_id)?;
         f.read_to_end(&mut file_content)
             .map_err(|e| anyhow::anyhow!("Error occur while reading WASM file: {}", e))?;
+        let mut f = File::open(&self.abi_path)
+            .map_err(|_| anyhow::anyhow!("Unable to read ABI from {}", self.abi_path))?;
+        let mut abi_content = Vec::new();
+        f.read_to_end(&mut abi_content)
+            .map_err(|e| anyhow::anyhow!("Error occur while reading ABI file: {}", e))?;
         let runtime = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
-        runtime.block_on(async { install(rpc, signer, id, &file_content, options.verbose).await })
+        runtime.block_on(async {
+            install(
+                rpc,
+                signer,
+                id,
+                &file_content,
+                &abi_content,
+                options.verbose,
+            )
+            .await
+        })
     }
 }
 
@@ -57,6 +75,7 @@ async fn install(
     signer: Keypair,
     nucleus_id: AccountId32,
     file_content: &[u8],
+    abi_content: &[u8],
     verbose: bool,
 ) -> anyhow::Result<()> {
     let digest = calculate_blake2b_digest(file_content);
@@ -91,11 +110,13 @@ async fn install(
         .upload_nucleus_wasm(nucleus_id, node_id, digest);
     let signed_tx = api.tx().create_signed(&tx, &signer, ext_params).await?;
     let tx_bytes = signed_tx.into_encoded();
+    let abi = serde_json::from_slice::<serde_json::Value>(abi_content)
+        .map_err(|e| anyhow::anyhow!("Failed to parse ABI content: {}", e))?;
     if verbose {
         println!("[+] Signed raw transaction: {}", hex::encode(&tx_bytes));
     }
     use subxt::backend::legacy::rpc_methods::Bytes;
-    let params = rpc_params![Bytes(tx_bytes), Bytes(file_content.to_vec())];
+    let params = rpc_params![Bytes(tx_bytes), Bytes(file_content.to_vec()), abi];
     let deploy_result: String = rpc_client.request("nucleus_deploy", params).await?;
     println!("Transaction submitted: {:?}", deploy_result);
     Ok(())

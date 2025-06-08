@@ -49,7 +49,7 @@ pub struct Options {
     pub key: Option<String>,
 }
 
-pub(crate) const DEV_RPC_HOST: &'static str = "wss://alpha-devnet.verisense.network";
+pub(crate) const DEV_RPC_HOST: &'static str = "wss://rpc.beta.verisense.network";
 
 const DEFAULT_VRX_HOME: &'static str = ".vrx";
 
