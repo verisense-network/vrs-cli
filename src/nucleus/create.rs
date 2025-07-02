@@ -14,9 +14,6 @@ pub struct CreateNucleusCmd {
         help = "The number of subnet members to run this nucleus"
     )]
     capacity: u8,
-
-    #[arg(long, help = "Indicates the nucleus is for running an AI agent.")]
-    agent: bool,
 }
 
 impl CreateNucleusCmd {
@@ -25,9 +22,7 @@ impl CreateNucleusCmd {
         let key_file = options.get_keyfile();
         let signer = crate::account::read_key(key_file)?;
         let rt = tokio::runtime::Runtime::new().expect("Failed to create Tokio runtime");
-        rt.block_on(async {
-            submit_tx(rpc, signer, self.name.clone(), self.capacity, self.agent).await
-        })
+        rt.block_on(async { submit_tx(rpc, signer, self.name.clone(), self.capacity, false).await })
     }
 }
 
@@ -36,7 +31,7 @@ async fn submit_tx(
     signer: Keypair,
     nucleus_name: String,
     capacity: u8,
-    agent: bool,
+    a2a_compatible: bool,
 ) -> anyhow::Result<()> {
     let rpc_client = RpcClient::from_url(rpc_url.as_ref()).await?;
     let api = OnlineClient::<SubstrateConfig>::from_rpc_client(rpc_client.clone()).await?;
@@ -44,7 +39,7 @@ async fn submit_tx(
         nucleus_name.as_bytes().to_vec(),
         None,
         capacity,
-        agent,
+        a2a_compatible,
     );
     let result = api
         .tx()
