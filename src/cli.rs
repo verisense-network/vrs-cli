@@ -139,6 +139,9 @@ impl AccountCommand {
 pub enum NucleusCommand {
     Create(crate::nucleus::CreateNucleusCmd),
     Install(crate::nucleus::InstallCmd),
+    Log(crate::nucleus::CheckNucleusLogCmd),
+    Info(crate::nucleus::NucleusInfoCmd),
+    Abi(crate::nucleus::NucleusAbiCmd),
 }
 
 impl NucleusCommand {
@@ -146,6 +149,9 @@ impl NucleusCommand {
         let r = match self {
             NucleusCommand::Create(cmd) => cmd.run(options),
             NucleusCommand::Install(cmd) => cmd.run(options),
+            NucleusCommand::Log(cmd) => cmd.run(options),
+            NucleusCommand::Info(cmd) => cmd.run(options),
+            NucleusCommand::Abi(cmd) => cmd.run(options),
         };
         if let Err(e) = r {
             eprintln!("{}", e);
